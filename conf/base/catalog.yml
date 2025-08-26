@@ -1,0 +1,201 @@
+# Here you can define all your data sets by using simple YAML syntax.
+#
+# Documentation for this file format can be found in "The Data Catalog"
+# Link: https://docs.kedro.org/en/stable/data/data_catalog.html
+#
+# We support interacting with a variety of data stores including local file systems, cloud, network and HDFS
+#
+# An example data set definition can look as follows:
+#
+#bikes:
+#  type: pandas.CSVDataset
+#  filepath: "data/01_raw/bikes.csv"
+#
+#weather:
+#  type: spark.SparkDataset
+#  filepath: s3a://your_bucket/data/01_raw/weather*
+#  file_format: csv
+#  credentials: dev_s3
+#  load_args:
+#    header: True
+#    inferSchema: True
+#  save_args:
+#    sep: '|'
+#    header: True
+#
+#scooters:
+#  type: pandas.SQLTableDataset
+#  credentials: scooters_credentials
+#  table_name: scooters
+#  load_args:
+#    index_col: ['name']
+#    columns: ['name', 'gear']
+#  save_args:
+#    if_exists: 'replace'
+#    # if_exists: 'fail'
+#    # if_exists: 'append'
+#
+# The Data Catalog supports being able to reference the same file using two different Dataset implementations
+# (transcoding), templating and a way to reuse arguments that are frequently repeated. See more here:
+# https://docs.kedro.org/en/stable/data/data_catalog.html
+
+
+########## Data Sources ##########
+source_hdb_resale_prices:
+  type: pandas.CSVDataset
+  filepath: s3://sec-national-coding-week/kedro_workshop/source_data/resale-flat-prices-big-set.csv
+  fs_args:
+    anon: true  # Enable anonymous access
+  credentials: null
+
+source_mrt_stations:
+  type: pandas.ExcelDataset
+  filepath: s3://sec-national-coding-week/kedro_workshop/source_data/mrt_stations.xlsx
+  credentials: null
+  fs_args:
+    anon: true  # Enable anonymous access
+  load_args:
+    engine: openpyxl
+
+source_hdb_address_geodata:
+  type: pandas.CSVDataset
+  filepath: s3://sec-national-coding-week/kedro_workshop/source_data/address_geolocations.csv
+  credentials: null
+  fs_args:
+    anon: true  # Enable anonymous access
+
+source_mrt_geodata:
+  type: api.APIDataset
+  url: https://overpass-api.de/api/interpreter
+  load_args:
+    params:
+      data: >
+        [out:json];
+        area["ISO3166-1"="SG"][admin_level=2];
+        node(area)["subway"="yes"];
+        out;
+
+source_mall_geodata:
+  type: api.APIDataset
+  url: https://overpass-api.de/api/interpreter
+  load_args:
+    params:
+      data: >
+        [out:json];
+        area["ISO3166-1"="SG"][admin_level=2]->.sg;
+        (
+          node["shop"="mall"](area.sg);
+          way["shop"="mall"](area.sg);
+          relation["shop"="mall"](area.sg);
+        );
+        out center;
+
+
+########## staging Data ##########
+
+staging_hdb_resale_prices:
+  type: pandas.CSVDataset
+  filepath: data/02_staging/hdb_resale_prices.csv
+
+staging_mrt_stations:
+  type: pandas.ExcelDataset
+  filepath: data/02_staging/mrt_stations.xslx
+
+staging_hdb_address_geodata:
+  type: pandas.CSVDataset
+  filepath: data/02_staging/address_geodata.csv
+
+staging_mrt_geodata:
+  type: json.JSONDataset
+  filepath: data/02_staging/mrt_geodata.json
+
+staging_mall_geodata:
+  type: json.JSONDataset
+  filepath: data/02_staging/mall_geodata.json
+
+
+########## Clean Data ##########
+
+clean_hdb_resale_prices:
+  type: pandas.ParquetDataset
+  filepath: data/03_clean/hdb_resale_prices.parquet
+
+clean_mrt_stations:
+  type: pandas.ParquetDataset
+  filepath: data/03_clean/mrt_stations.parquet
+
+clean_hdb_address_geodata:
+  type: pandas.ParquetDataset
+  filepath: data/03_clean/address_geodata.parquet
+
+clean_mrt_geodata:
+  type: pandas.ParquetDataset
+  filepath: data/03_clean/mrt_geodata.parquet
+
+clean_mall_geodata:
+  type: pandas.ParquetDataset
+  filepath: data/03_clean/mall_geodata.parquet
+
+
+########## Transformed Analytics Data ##########
+transformed_analytics_feature_set:
+  type: pandas.CSVDataset
+  filepath: data/03_transformed/feature_set.csv
+
+####################### EXAMPLE #######################
+
+companies:
+  type: pandas.CSVDataset
+  filepath: data/01_raw/companies.csv
+
+reviews:
+  type: pandas.CSVDataset
+  filepath: data/01_raw/reviews.csv
+
+shuttles:
+  type: pandas.ExcelDataset
+  filepath: data/01_raw/shuttles.xlsx
+  load_args:
+    engine: openpyxl
+
+preprocessed_companies:
+  type: pandas.ParquetDataset
+  filepath: data/02_intermediate/preprocessed_companies.parquet
+
+preprocessed_shuttles:
+  type: pandas.ParquetDataset
+  filepath: data/02_intermediate/preprocessed_shuttles.parquet
+
+model_input_table:
+  type: pandas.ParquetDataset
+  filepath: data/03_primary/model_input_table.parquet
+
+regressor:
+  type: pickle.PickleDataset
+  filepath: data/06_models/regressor.pickle
+  versioned: true
+
+shuttle_passenger_capacity_plot_exp:
+  type: plotly.PlotlyDataset
+  filepath: data/08_reporting/shuttle_passenger_capacity_plot_exp.json
+  versioned: true
+  plotly_args:
+    type: bar
+    fig:
+      x: shuttle_type
+      y: passenger_capacity
+      orientation: h
+    layout:
+      xaxis_title: Shuttles
+      yaxis_title: Average passenger capacity
+      title: Shuttle Passenger capacity
+
+shuttle_passenger_capacity_plot_go:
+  type: plotly.JSONDataset
+  filepath: data/08_reporting/shuttle_passenger_capacity_plot_go.json
+  versioned: true
+
+dummy_confusion_matrix:
+  type: matplotlib.MatplotlibWriter
+  filepath: data/08_reporting/dummy_confusion_matrix.png
+  versioned: true
