@@ -95,23 +95,25 @@ source_mall_geodata:
 
 staging_hdb_resale_prices:
   type: pandas.CSVDataset
-  filepath: data/02_staging/hdb_resale_prices.csv
+  filepath: data/01_staging/hdb_resale_prices.csv
 
 staging_mrt_stations:
   type: pandas.ExcelDataset
-  filepath: data/02_staging/mrt_stations.xlsx
+  filepath: data/01_staging/mrt_stations.xlsx
+  load_args:
+    engine: 'openpyxl'
 
 staging_hdb_address_geodata:
   type: pandas.CSVDataset
-  filepath: data/02_staging/address_geodata.csv
+  filepath: data/01_staging/address_geodata.csv
 
 staging_mrt_geodata:
   type: json.JSONDataset
-  filepath: data/02_staging/mrt_geodata.json
+  filepath: data/01_staging/mrt_geodata.json
 
 staging_mall_geodata:
   type: json.JSONDataset
-  filepath: data/02_staging/mall_geodata.json
+  filepath: data/01_staging/mall_geodata.json
 
 
 ########## Clean Data ##########
@@ -121,84 +123,26 @@ staging_mall_geodata:
 
 clean_hdb_resale_prices:
   type: pandas.CSVDataset
-  filepath: data/03_clean/hdb_resale_prices.csv
+  filepath: data/02_clean/hdb_resale_prices.csv
 
 clean_mrt_stations:
   type: pandas.CSVDataset
-  filepath: data/03_clean/mrt_stations.csv
+  filepath: data/02_clean/mrt_stations.csv
 
 clean_hdb_address_geodata:
   type: pandas.CSVDataset
-  filepath: data/03_clean/address_geodata.csv
+  filepath: data/02_clean/address_geodata.csv
 
 clean_mrt_geodata:
   type: pandas.CSVDataset
-  filepath: data/03_clean/mrt_geodata.csv
+  filepath: data/02_clean/mrt_geodata.csv
 
 clean_mall_geodata:
   type: pandas.CSVDataset
-  filepath: data/03_clean/mall_geodata.csv
+  filepath: data/02_clean/mall_geodata.csv
 
 
 ########## Transformed Analytics Data ##########
-transformed_analytics_feature_set:
+transformed_feature_set:
   type: pandas.CSVDataset
-  filepath: data/03_transformed/feature_set.csv
-
-####################### EXAMPLE #######################
-
-companies:
-  type: pandas.CSVDataset
-  filepath: data/01_raw/companies.csv
-
-reviews:
-  type: pandas.CSVDataset
-  filepath: data/01_raw/reviews.csv
-
-shuttles:
-  type: pandas.ExcelDataset
-  filepath: data/01_raw/shuttles.xlsx
-  load_args:
-    engine: openpyxl
-
-preprocessed_companies:
-  type: pandas.ParquetDataset
-  filepath: data/02_intermediate/preprocessed_companies.parquet
-
-preprocessed_shuttles:
-  type: pandas.ParquetDataset
-  filepath: data/02_intermediate/preprocessed_shuttles.parquet
-
-model_input_table:
-  type: pandas.ParquetDataset
-  filepath: data/03_primary/model_input_table.parquet
-
-regressor:
-  type: pickle.PickleDataset
-  filepath: data/06_models/regressor.pickle
-  versioned: true
-
-shuttle_passenger_capacity_plot_exp:
-  type: plotly.PlotlyDataset
-  filepath: data/08_reporting/shuttle_passenger_capacity_plot_exp.json
-  versioned: true
-  plotly_args:
-    type: bar
-    fig:
-      x: shuttle_type
-      y: passenger_capacity
-      orientation: h
-    layout:
-      xaxis_title: Shuttles
-      yaxis_title: Average passenger capacity
-      title: Shuttle Passenger capacity
-
-shuttle_passenger_capacity_plot_go:
-  type: plotly.JSONDataset
-  filepath: data/08_reporting/shuttle_passenger_capacity_plot_go.json
-  versioned: true
-
-dummy_confusion_matrix:
-  type: matplotlib.MatplotlibWriter
-  filepath: data/08_reporting/dummy_confusion_matrix.png
-  versioned: true
+  filepath: data/03_feature/feature_set.csv
