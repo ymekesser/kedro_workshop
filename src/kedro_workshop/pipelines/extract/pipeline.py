@@ -10,6 +10,7 @@ from .nodes import (
 
 
 def create_pipeline(**kwargs) -> Pipeline:
+    """ This pipeline extracts the data from various sources (see data catalogs to see from where)."""
     return Pipeline(
         [
             Node(

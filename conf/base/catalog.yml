@@ -99,7 +99,7 @@ staging_hdb_resale_prices:
 
 staging_mrt_stations:
   type: pandas.ExcelDataset
-  filepath: data/02_staging/mrt_stations.xslx
+  filepath: data/02_staging/mrt_stations.xlsx
 
 staging_hdb_address_geodata:
   type: pandas.CSVDataset
