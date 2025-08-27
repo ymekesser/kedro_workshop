@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 def extract_hdb_resale_prices(hdb_resale_prices: pd.DataFrame) -> pd.DataFrame:
     """Extract HDB resale prices with educational logging and validation."""
     logger.info(f"Extracted {len(hdb_resale_prices)} HDB resale records")
-    
+
     # Basic validation
     if hdb_resale_prices.empty:
         raise ValueError("HDB resale data is empty")
@@ -30,7 +30,7 @@ def extract_mrt_stations(mrt_stations: pd.DataFrame) -> pd.DataFrame:
     if mrt_stations.empty:
         raise ValueError("MRT stations data is empty")
 
-    expected_columns = ["Station Name", "Line"]
+    expected_columns = ["Name", "Line", "Code"]
     _validate_expected_columns(mrt_stations, expected_columns, "MRT stations")
 
     return mrt_stations
