@@ -115,26 +115,29 @@ staging_mall_geodata:
 
 
 ########## Clean Data ##########
+# Note: Using CSV format for workshop accessibility - as it can easily
+# be inspected with Excel or text editors. In production, consider Parquet
+# for better performance and storage efficiency.
 
 clean_hdb_resale_prices:
-  type: pandas.ParquetDataset
-  filepath: data/03_clean/hdb_resale_prices.parquet
+  type: pandas.CSVDataset
+  filepath: data/03_clean/hdb_resale_prices.csv
 
 clean_mrt_stations:
-  type: pandas.ParquetDataset
-  filepath: data/03_clean/mrt_stations.parquet
+  type: pandas.CSVDataset
+  filepath: data/03_clean/mrt_stations.csv
 
 clean_hdb_address_geodata:
-  type: pandas.ParquetDataset
-  filepath: data/03_clean/address_geodata.parquet
+  type: pandas.CSVDataset
+  filepath: data/03_clean/address_geodata.csv
 
 clean_mrt_geodata:
-  type: pandas.ParquetDataset
-  filepath: data/03_clean/mrt_geodata.parquet
+  type: pandas.CSVDataset
+  filepath: data/03_clean/mrt_geodata.csv
 
 clean_mall_geodata:
-  type: pandas.ParquetDataset
-  filepath: data/03_clean/mall_geodata.parquet
+  type: pandas.CSVDataset
+  filepath: data/03_clean/mall_geodata.csv
 
 
 ########## Transformed Analytics Data ##########
