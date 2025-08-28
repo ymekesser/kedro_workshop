@@ -151,16 +151,16 @@ transformed_feature_set:
 ########## Model Data ##########
 linear_regression_model:
   type: pickle.PickleDataset
-  filepath: data/06_models/linear_regression_model.pkl
+  filepath: data/04_model/linear_regression_model.pkl
 
 model_info:
   type: json.JSONDataset
-  filepath: data/06_models/model_info.json
+  filepath: data/04_model/model_info.json
 
 model_performance_report:
   type: pandas.CSVDataset
-  filepath: data/07_model_output/model_performance_report.csv
+  filepath: data/04_model/model_performance_report.csv
 
 model_plots:
   type: matplotlib.MatplotlibWriter
-  filepath: data/08_reporting/model_analysis_plots.png
+  filepath: data/04_model/model_analysis_plots.png
