@@ -46,11 +46,12 @@ def clean_hdb_resale_prices(hdb_resale_prices: pd.DataFrame) -> pd.DataFrame:
     numeric_columns = ["resale_price", "floor_area_sqm", "lease_commence_date"]
     df = convert_columns_to_numeric(df, numeric_columns)
 
-    # Parse storey range to get min, max, and median storey
+    # Parse storey range to get min, max, and median storey (vectorized for speed)
     logger.info("Parsing storey ranges...")
-    df[["storey_min", "storey_max", "storey_median"]] = df["storey_range"].apply(
-        lambda x: pd.Series(_parse_storey_range(x))
-    )
+    split_data = df["storey_range"].str.split(" TO ", expand=True)
+    df["storey_min"] = pd.to_numeric(split_data[0], errors="coerce").fillna(0).astype(int)
+    df["storey_max"] = pd.to_numeric(split_data[1], errors="coerce").fillna(0).astype(int)
+    df["storey_median"] = (df["storey_min"] + df["storey_max"]) / 2
 
     # Parse remaining lease to convert to months
     logger.info("Parsing remaining lease...")
@@ -192,22 +193,6 @@ def clean_hdb_address_geodata(hdb_address_geodata: pd.DataFrame) -> pd.DataFrame
     return df
 
 
-def _parse_storey_range(storey_range: str) -> tuple[int, int, float]:
-    """Parse storey range string like '04 TO 06' into min, max, median."""
-    try:
-        if pd.isna(storey_range):
-            return (0, 0, 0.0)
-
-        # Split on 'TO' and convert to integers
-        parts = storey_range.split(" TO ")
-        min_storey = int(parts[0])
-        max_storey = int(parts[1])
-        median_storey = (min_storey + max_storey) / 2
-
-        return (min_storey, max_storey, median_storey)
-
-    except (ValueError, IndexError):
-        return (0, 0, 0.0)
 
 
 def _parse_remaining_lease(lease_str, lease_commence_date, sale_date) -> int:

@@ -146,3 +146,21 @@ clean_mall_geodata:
 transformed_feature_set:
   type: pandas.CSVDataset
   filepath: data/03_feature/feature_set.csv
+
+
+########## Model Data ##########
+linear_regression_model:
+  type: pickle.PickleDataset
+  filepath: data/06_models/linear_regression_model.pkl
+
+model_info:
+  type: json.JSONDataset
+  filepath: data/06_models/model_info.json
+
+model_performance_report:
+  type: pandas.CSVDataset
+  filepath: data/07_model_output/model_performance_report.csv
+
+model_plots:
+  type: matplotlib.MatplotlibWriter
+  filepath: data/08_reporting/model_analysis_plots.png
