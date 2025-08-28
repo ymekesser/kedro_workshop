@@ -1,76 +1,84 @@
+"""Extract pipeline nodes for processing raw data sources.
+
+This module contains the extraction nodes that:
+1. Load data from various sources (CSV files, Excel files, APIs)
+2. Perform basic validation and logging
+3. Pass clean data to the next pipeline stage
+"""
+
 import logging
-from datetime import datetime
 from typing import Any, Dict
 
 import pandas as pd
 import requests
 
+from .validation import (
+    validate_data_quantity,
+    validate_api_response_success,
+    validate_dataframe_not_empty,
+    validate_overpass_data_structure,
+    validate_required_columns,
+)
+
 logger = logging.getLogger(__name__)
 
 
 def extract_hdb_resale_prices(hdb_resale_prices: pd.DataFrame) -> pd.DataFrame:
-    """Extract HDB resale prices with educational logging and validation."""
-    logger.info(f"Extracted {len(hdb_resale_prices)} HDB resale records")
+    """Extract and validate HDB resale price data.
 
-    # Basic validation
-    if hdb_resale_prices.empty:
-        raise ValueError("HDB resale data is empty")
+    This node processes HDB resale transaction data, checking for:
+    - Non-empty dataset
+    - Required columns for downstream analysis
+    """
+    logger.info(f"Processing {len(hdb_resale_prices)} HDB resale records")
 
-    expected_columns = ["town", "resale_price", "flat_type", "floor_area_sqm"]
-    _validate_expected_columns(hdb_resale_prices, expected_columns, "HDB resale prices")
+    # Validate data quality using shared utilities
+    validate_dataframe_not_empty(hdb_resale_prices, "HDB resale prices")
+
+    required_columns = ["town", "resale_price", "flat_type", "floor_area_sqm"]
+    validate_required_columns(hdb_resale_prices, required_columns, "HDB resale prices")
 
     return hdb_resale_prices
 
 
 def extract_mrt_stations(mrt_stations: pd.DataFrame) -> pd.DataFrame:
-    """Extract MRT station data with educational logging and validation."""
-    logger.info(f"Extracted {len(mrt_stations)} MRT station records")
+    """Extract and validate MRT station reference data.
 
-    # Basic validation
-    if mrt_stations.empty:
-        raise ValueError("MRT stations data is empty")
+    This node processes MRT station information, checking for:
+    - Non-empty dataset
+    - Required columns for station identification
+    """
+    logger.info(f"Processing {len(mrt_stations)} MRT station records")
 
-    expected_columns = ["Name", "Line", "Code"]
-    _validate_expected_columns(mrt_stations, expected_columns, "MRT stations")
+    # Validate data quality using shared utilities
+    validate_dataframe_not_empty(mrt_stations, "MRT stations")
+
+    required_columns = ["Name", "Line", "Code"]
+    validate_required_columns(mrt_stations, required_columns, "MRT stations")
 
     return mrt_stations
 
 
 def extract_mrt_geodata(mrt_geodata: requests.Response) -> Dict[str, Any]:
-    """Extract MRT station geodata from Overpass API response with validation."""
+    """Extract MRT station geographic data from Overpass API.
+
+    This node processes API response data containing MRT station locations.
+    It demonstrates how to handle external API data with proper validation.
+    """
     try:
-        # Check if request was successful
-        if mrt_geodata.status_code != 200:
-            raise ValueError(
-                f"API request failed with status {mrt_geodata.status_code}: "
-                f"{mrt_geodata.text}"
-            )
+        # Validate API response using shared utilities
+        validate_api_response_success(mrt_geodata)
 
+        # Parse and validate JSON structure
         data = mrt_geodata.json()
+        validate_overpass_data_structure(data)
 
-        # Structural Validation
-        if not isinstance(data, dict):
-            raise ValueError("API response is not a valid JSON object")
-
-        if "elements" not in data:
-            raise ValueError("API response missing 'elements' field")
-
+        # Extract elements and log results
         elements = data.get("elements", [])
-        logger.info(f"Extracted {len(elements)} MRT station records")
+        logger.info(f"Extracted {len(elements)} MRT station geodata records")
 
-        # Basic validation - check if we have reasonable data
-        if len(elements) == 0:
-            logger.warning("No MRT station data found in API response")
-        elif len(elements) < 50:  # Singapore has ~200+ MRT stations
-            logger.warning(f"Only {len(elements)} MRT stations found - this seems low")
-
-        # Add extraction metadata
-        data["extraction_metadata"] = {
-            "extracted_at": datetime.now().isoformat(),
-            "source": "Overpass API",
-            "record_count": len(elements),
-            "status_code": mrt_geodata.status_code,
-        }
+        # Quality checks for workshop demonstration
+        validate_data_quantity(len(elements), 50, "MRT stations")
 
         return data
 
@@ -82,52 +90,25 @@ def extract_mrt_geodata(mrt_geodata: requests.Response) -> Dict[str, Any]:
 
 
 def extract_mall_geodata(mall_geodata: requests.Response) -> Dict[str, Any]:
-    """Extract shopping mall geodata from Overpass API response with validation."""
+    """Extract shopping mall geographic data from Overpass API.
+
+    This node processes API response data containing shopping mall locations.
+    Similar pattern to MRT geodata extraction but for retail locations.
+    """
     try:
-        # Check if request was successful
-        if mall_geodata.status_code != 200:
-            raise ValueError(
-                f"API request failed with status {mall_geodata.status_code}: "
-                f"{mall_geodata.text}"
-            )
+        # Validate API response using shared utilities
+        validate_api_response_success(mall_geodata)
 
+        # Parse and validate JSON structure
         data = mall_geodata.json()
+        validate_overpass_data_structure(data)
 
-        # Structural Validation
-        if not isinstance(data, dict):
-            raise ValueError("API response is not a valid JSON object")
-
-        if "elements" not in data:
-            raise ValueError("API response missing 'elements' field")
-
+        # Extract elements and log results
         elements = data.get("elements", [])
-        logger.info(f"Extracted {len(elements)} shopping mall records")
+        logger.info(f"Extracted {len(elements)} shopping mall geodata records")
 
-        # Basic validation - check if we have reasonable data
-        if len(elements) == 0:
-            logger.warning("No shopping mall data found in API response")
-        elif len(elements) < 10:  # Singapore should have many malls
-            logger.warning(
-                f"Only {len(elements)} shopping malls found - this seems low"
-            )
-
-        # Log breakdown of mall types if available
-        mall_types = {}
-        for element in elements:
-            element_type = element.get("type", "unknown")
-            mall_types[element_type] = mall_types.get(element_type, 0) + 1
-
-        if mall_types:
-            logger.info(f"Mall data breakdown: {mall_types}")
-
-        # Add extraction metadata
-        data["extraction_metadata"] = {
-            "extracted_at": datetime.now().isoformat(),
-            "source": "Overpass API",
-            "record_count": len(elements),
-            "status_code": mall_geodata.status_code,
-            "element_types": mall_types,
-        }
+        # Quality checks for workshop demonstration
+        validate_data_quantity(len(elements), 10, "shopping malls")
 
         return data
 
@@ -139,26 +120,20 @@ def extract_mall_geodata(mall_geodata: requests.Response) -> Dict[str, Any]:
 
 
 def extract_hdb_address_geodata(hdb_address_geodata: pd.DataFrame) -> pd.DataFrame:
-    """Extract HDB address geodata with educational logging and validation."""
-    logger.info(f"Extracted {len(hdb_address_geodata)} HDB address records")
+    """Extract and validate HDB address geographic data.
+
+    This node processes HDB address coordinates that will be used
+    to calculate distances to amenities like MRT stations and malls.
+    """
+    logger.info(f"Processing {len(hdb_address_geodata)} HDB address records")
     logger.info(f"Data shape: {hdb_address_geodata.shape}")
 
-    # Basic validation
-    if hdb_address_geodata.empty:
-        raise ValueError("HDB address geodata is empty")
+    # Validate data quality using shared utilities
+    validate_dataframe_not_empty(hdb_address_geodata, "HDB address geodata")
 
-    expected_columns = ["latitude", "longitude"]
-    _validate_expected_columns(
-        hdb_address_geodata, expected_columns, "HDB address geodata"
+    required_columns = ["latitude", "longitude"]
+    validate_required_columns(
+        hdb_address_geodata, required_columns, "HDB address geodata"
     )
 
     return hdb_address_geodata
-
-
-def _validate_expected_columns(
-    data: pd.DataFrame, expected_columns: list[str], dataset_name: str
-) -> None:
-    """Helper function to validate expected columns are present in the dataset."""
-    missing_columns = [col for col in expected_columns if col not in data.columns]
-    if missing_columns:
-        logger.warning(f"Missing expected columns in {dataset_name}: {missing_columns}")

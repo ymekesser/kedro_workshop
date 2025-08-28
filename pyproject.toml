@@ -16,7 +16,6 @@ dependencies = [
     "notebook>=7.4.5",
     "s3fs>=2025.7.0",
     "scikit-learn~=1.5.1",
-    "seaborn~=0.12.1",
 ]
 
 [project.scripts]

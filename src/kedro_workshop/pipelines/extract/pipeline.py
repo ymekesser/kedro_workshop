@@ -10,7 +10,19 @@ from .nodes import (
 
 
 def create_pipeline(**kwargs) -> Pipeline:
-    """ This pipeline extracts the data from various sources (see data catalogs to see from where)."""
+    """Create the data extraction pipeline.
+
+    This pipeline extracts raw data from various sources:
+    - HDB resale prices from CSV files
+    - MRT station reference data from an Excel file
+    - MRT and mall geodata from Overpass API responses
+    - HDB address coordinates from preprocessed data
+
+    Each node does some sanity checks on the data and then stores
+    it for the next pipeline stage (cleaning).
+
+    The data sources are defined in the data catalog (conf/base/catalog.yml)
+    """
     return Pipeline(
         [
             Node(
